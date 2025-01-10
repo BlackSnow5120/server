@@ -1,3 +1,4 @@
+import mongoose from 'mongoose'; // Ensure mongoose is imported
 import { connectToDatabase } from '../../../lib/mongodb';
 import Comment from '../../../models/Comment';
 
@@ -69,9 +70,9 @@ export const deleteComment = async (req, res) => {
   }
 };
 
-// This is the default exported handler that routes to the right function based on the HTTP method.
+// Default export handler for the API route
 export default async function handler(req, res) {
-  await connect();  // Connect to database
+  await connect();  // Connect to the database
 
   switch (req.method) {
     case 'POST':
