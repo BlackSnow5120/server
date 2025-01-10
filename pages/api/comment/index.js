@@ -1,5 +1,5 @@
-import { connectToDatabase } from '../../lib/mongodb';
-import Comment from '../../models/Comment';
+import { connectToDatabase } from '../../../lib/mongodb';
+import Comment from '../../../models/Comment';
 
 // Helper function to connect to MongoDB
 const connect = async () => {
