@@ -22,7 +22,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage }).single('img');
 
-export default async (req, res) => {
+const handleItemRequest = async (req, res) => {
   await connectToDatabase();
 
   if (req.method === 'GET') {
@@ -33,17 +33,17 @@ export default async (req, res) => {
         if (!item) {
           return res.status(404).json({ message: 'Item not found' });
         }
-        res.status(200).json(item);
-      } catch (error) {
-        res.status(500).json({ message: 'Error fetching item' });
+        return res.status(200).json(item);
+      } catch {
+        return res.status(500).json({ message: 'Error fetching item' });
       }
     } else {
       // Get all items
       try {
         const items = await Item.find();
-        res.status(200).json(items);
-      } catch (error) {
-        res.status(500).json({ message: 'Error fetching items' });
+        return res.status(200).json(items);
+      } catch {
+        return res.status(500).json({ message: 'Error fetching items' });
       }
     }
   }
@@ -61,9 +61,9 @@ export default async (req, res) => {
 
       try {
         await newItem.save();
-        res.status(201).json({ message: 'Item added successfully', item: newItem });
-      } catch (error) {
-        res.status(500).json({ message: 'Error adding item' });
+        return res.status(201).json({ message: 'Item added successfully', item: newItem });
+      } catch {
+        return res.status(500).json({ message: 'Error adding item' });
       }
     });
   }
@@ -93,9 +93,9 @@ export default async (req, res) => {
           return res.status(404).json({ message: 'Item not found' });
         }
 
-        res.status(200).json({ message: 'Item updated successfully', item: updatedItem });
-      } catch (error) {
-        res.status(500).json({ message: 'Error updating item' });
+        return res.status(200).json({ message: 'Item updated successfully', item: updatedItem });
+      } catch {
+        return res.status(500).json({ message: 'Error updating item' });
       }
     });
   }
@@ -107,9 +107,11 @@ export default async (req, res) => {
       if (!deletedItem) {
         return res.status(404).json({ message: 'Item not found' });
       }
-      res.status(200).json({ message: 'Item deleted successfully' });
-    } catch (error) {
-      res.status(500).json({ message: 'Error deleting item' });
+      return res.status(200).json({ message: 'Item deleted successfully' });
+    } catch {
+      return res.status(500).json({ message: 'Error deleting item' });
     }
   }
 };
+
+export default handleItemRequest;

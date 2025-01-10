@@ -1,9 +1,10 @@
 import { connectToDatabase } from '../../../lib/mongodb';
 import User from '../../../models/User';
 
-export default async (req, res) => {
+const handleUserRequest = async (req, res) => {
   await connectToDatabase();
 
+  // Handle user registration (POST request)
   if (req.method === 'POST' && req.body.addusers) {
     const { name, email, mobileNumber, password, role, address, gender, dateOfBirth } = req.body;
 
@@ -13,7 +14,9 @@ export default async (req, res) => {
       return res.status(400).json({ message: 'Email already registered' });
     }
 
-    const newUser = new User({ name, email, mobileNumber, password, role, address, gender, dateOfBirth });
+    const newUser = new User({
+      name, email, mobileNumber, password, role, address, gender, dateOfBirth,
+    });
 
     try {
       await newUser.save();
@@ -24,6 +27,7 @@ export default async (req, res) => {
     }
   }
 
+  // Handle user login (POST request)
   if (req.method === 'POST' && req.body.login) {
     const { email, password } = req.body;
 
@@ -33,6 +37,7 @@ export default async (req, res) => {
         return res.status(400).json({ message: 'Invalid email or password' });
       }
 
+      // Set user session
       req.session.userId = user.uid;
       req.session.isLoggedIn = true;
       res.status(200).json({ message: 'Login successful', user: user });
@@ -42,6 +47,7 @@ export default async (req, res) => {
     }
   }
 
+  // Handle user logout (POST request)
   if (req.method === 'POST' && req.body.logout) {
     req.session.destroy((err) => {
       if (err) {
@@ -51,6 +57,7 @@ export default async (req, res) => {
     });
   }
 
+  // Handle password update (PUT request)
   if (req.method === 'PUT' && req.body.updatePassword) {
     const { currentPassword, newPassword } = req.body;
 
@@ -74,3 +81,5 @@ export default async (req, res) => {
     }
   }
 };
+
+export default handleUserRequest;

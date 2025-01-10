@@ -1,7 +1,8 @@
 import { connectToDatabase } from '../../../lib/mongodb';
 import CartItem from '../../../models/CartItem';
 
-export default async (req, res) => {
+// Assign the function to a variable before exporting
+const handleCartRequest = async (req, res) => {
   await connectToDatabase();
 
   if (req.method === 'GET') {
@@ -9,8 +10,8 @@ export default async (req, res) => {
 
     try {
       const items = await CartItem.find({ userID });
-      res.json(items);
-    } catch (error) {
+      res.status(200).json(items);
+    } catch {
       res.status(500).send('Server Error');
     }
   }
@@ -30,7 +31,7 @@ export default async (req, res) => {
       }
 
       res.status(200).json({ message: 'Cart updated successfully' });
-    } catch (error) {
+    } catch {
       res.status(500).send('Server Error');
     }
   }
@@ -46,8 +47,10 @@ export default async (req, res) => {
       }
 
       res.status(200).json({ message: 'Item deleted successfully' });
-    } catch (error) {
+    } catch {
       res.status(500).send('Server Error');
     }
   }
 };
+
+export default handleCartRequest;
