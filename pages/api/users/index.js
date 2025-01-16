@@ -1,7 +1,8 @@
 import { connectToDatabase } from '../../../lib/mongodb';
 import User from '../../../models/User';
+
 const setCorsHeaders = (res) => {
-  res.setHeader('Access-Control-Allow-Origin', 'https://powerhouse-e955.vercel.app'); // Update with your front-end URL
+  res.setHeader('Access-Control-Allow-Origin', 'https://powerhouse-e955.vercel.app');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -10,8 +11,8 @@ const setCorsHeaders = (res) => {
 const handleUserRequest = async (req, res) => {
   setCorsHeaders(res); // Set CORS headers
 
+  // Handle preflight request
   if (req.method === 'OPTIONS') {
-    // Handle preflight request
     return res.status(204).end();
   }
 
@@ -21,7 +22,6 @@ const handleUserRequest = async (req, res) => {
   if (req.method === 'POST' && req.body.addusers) {
     const { name, email, mobileNumber, password, role, address, gender, dateOfBirth } = req.body;
 
-    // Check if user already exists
     const userExists = await User.findOne({ email });
     if (userExists) {
       return res.status(400).json({ message: 'Email already registered' });
@@ -40,7 +40,9 @@ const handleUserRequest = async (req, res) => {
 
     try {
       await newUser.save();
-      res.status(201).json({ message: 'User registered successfully', user: newUser });
+      req.session.userId = newUser.uid; // Store user ID in session
+      req.session.isLoggedIn = true;
+      res.status(201).json({ message: 'User registered successfully' });
     } catch (error) {
       console.error('Error saving user:', error);
       res.status(500).json({ message: 'Error registering user' });
@@ -57,9 +59,11 @@ const handleUserRequest = async (req, res) => {
         return res.status(400).json({ message: 'Invalid email or password' });
       }
 
-      // Set user session
       req.session.userId = user.uid;
+      req.session.user = user;
       req.session.isLoggedIn = true;
+      user.password = ''; // Don't send password in response
+
       res.status(200).json({ message: 'Login successful', user: user });
     } catch (error) {
       console.error('Error logging in:', error);
@@ -73,6 +77,7 @@ const handleUserRequest = async (req, res) => {
       if (err) {
         return res.status(500).json({ message: 'Error logging out' });
       }
+      res.clearCookie('connect.sid'); // Clear session cookie
       res.status(200).json({ message: 'Logged out successfully' });
     });
   }
@@ -87,7 +92,6 @@ const handleUserRequest = async (req, res) => {
 
     try {
       const user = await User.findOne({ uid: req.session.userId });
-
       if (!user || user.password !== currentPassword) {
         return res.status(400).json({ message: 'Incorrect current password' });
       }
@@ -99,6 +103,47 @@ const handleUserRequest = async (req, res) => {
       console.error('Error updating password:', error);
       res.status(500).json({ message: 'Error updating password' });
     }
+  }
+
+  // Handle user profile update (PUT request)
+  if (req.method === 'PUT' && req.body.updateProfile) {
+    const { email, name, mobileNumber, address, gender, dateOfBirth } = req.body;
+
+    try {
+      const user = await User.findOne({ email });
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      user.name = name;
+      user.mobileNumber = mobileNumber;
+      user.address = address;
+      user.gender = gender;
+      user.dateOfBirth = dateOfBirth;
+
+      await user.save();
+      res.status(200).json({ message: 'Profile updated successfully', user });
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      res.status(500).json({ message: 'Error updating profile' });
+    }
+  }
+
+  // Handle checking login status (GET request)
+  if (req.method === 'GET' && req.body.checkLogin) {
+    if (req.session && req.session.userId) {
+      try {
+        const user = await User.findOne({ uid: req.session.userId });
+        if (user) {
+          user.password = ''; // Don't send password
+          return res.json({ loggedIn: true, user });
+        }
+      } catch (error) {
+        console.error('Error checking login status:', error);
+        res.status(500).json({ message: 'Error checking login status' });
+      }
+    }
+    res.json({ loggedIn: false });
   }
 
   // Handle unsupported methods
