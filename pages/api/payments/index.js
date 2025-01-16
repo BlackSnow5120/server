@@ -1,8 +1,15 @@
 import { connectToDatabase } from '../../../lib/mongodb';
 import Payment from '../../../models/Payment';
 import CartItem from '../../../models/CartItem';
+const setCorsHeaders = (res) => {
+  res.setHeader('Access-Control-Allow-Origin', 'https://powerhouse-e955.vercel.app'); // Update with your front-end URL
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+};
 
 const handlePaymentRequest = async (req, res) => {
+  setCorsHeaders(res); // Set CORS headers
   await connectToDatabase();
 
   if (req.method === 'POST') {
@@ -45,7 +52,6 @@ const handlePaymentRequest = async (req, res) => {
     }
   }
 
-  // Handle unsupported methods
   res.status(405).json({ message: 'Method Not Allowed' });
 };
 

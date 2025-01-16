@@ -1,7 +1,20 @@
 import { connectToDatabase } from '../../../lib/mongodb';
 import User from '../../../models/User';
+const setCorsHeaders = (res) => {
+  res.setHeader('Access-Control-Allow-Origin', 'https://powerhouse-e955.vercel.app'); // Update with your front-end URL
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+};
 
 const handleUserRequest = async (req, res) => {
+  setCorsHeaders(res); // Set CORS headers
+
+  if (req.method === 'OPTIONS') {
+    // Handle preflight request
+    return res.status(204).end();
+  }
+
   await connectToDatabase();
 
   // Handle user registration (POST request)
@@ -15,7 +28,14 @@ const handleUserRequest = async (req, res) => {
     }
 
     const newUser = new User({
-      name, email, mobileNumber, password, role, address, gender, dateOfBirth,
+      name,
+      email,
+      mobileNumber,
+      password,
+      role,
+      address,
+      gender,
+      dateOfBirth,
     });
 
     try {
@@ -80,6 +100,9 @@ const handleUserRequest = async (req, res) => {
       res.status(500).json({ message: 'Error updating password' });
     }
   }
+
+  // Handle unsupported methods
+  res.status(405).json({ message: 'Method Not Allowed' });
 };
 
 export default handleUserRequest;
