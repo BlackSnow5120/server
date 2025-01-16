@@ -150,7 +150,7 @@ const handleUserRequest = async (req, res) => {
 };
 
 export default withIronSession(handleUserRequest, {
-  password: "1234", // Use a strong session secret
+  password: "hgdyfbrjshdufhgndjsyetrgfbchdjenrhfyct455", // Use a strong session secret
   cookieName: "your-session-cookie",    // Name for the session cookie
   cookieOptions: {
     secure: process.env.NODE_ENV === "production", // Only secure cookies in production
