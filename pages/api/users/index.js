@@ -147,7 +147,7 @@ const handleUserRequest = async (req, res) => {
   }
 
   // Handle unsupported methods
-  res.status(405).json({ message: 'Method Not Allowed' });
+  res.status(405).json({ message: req.body });
 };
 
 export default handleUserRequest;
