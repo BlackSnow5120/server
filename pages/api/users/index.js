@@ -1,3 +1,4 @@
+import { withIronSession } from "next-iron-session";
 import { connectToDatabase } from '../../../lib/mongodb';
 import User from '../../../models/User';
 
@@ -40,8 +41,9 @@ const handleUserRequest = async (req, res) => {
 
     try {
       await newUser.save();
-      req.session.userId = newUser.uid; // Store user ID in session
-      req.session.isLoggedIn = true;
+      req.session.set("userId", newUser.uid); // Store user ID in session
+      req.session.set("isLoggedIn", true); // Set login status
+      await req.session.save();
       res.status(201).json({ message: 'User registered successfully' });
     } catch (error) {
       console.error('Error saving user:', error);
@@ -59,11 +61,12 @@ const handleUserRequest = async (req, res) => {
         return res.status(400).json({ message: 'Invalid email or password' });
       }
 
-      req.session.userId = user.uid;
-      req.session.user = user;
-      req.session.isLoggedIn = true;
-      user.password = ''; // Don't send password in response
+      req.session.set("userId", user.uid); // Store user ID in session
+      req.session.set("user", user); // Store user details in session
+      req.session.set("isLoggedIn", true); // Set login status
+      await req.session.save();
 
+      user.password = ''; // Don't send password in response
       res.status(200).json({ message: 'Login successful', user: user });
     } catch (error) {
       console.error('Error logging in:', error);
@@ -73,25 +76,21 @@ const handleUserRequest = async (req, res) => {
 
   // Handle user logout (POST request)
   if (req.method === 'POST' && req.body.logout) {
-    req.session.destroy((err) => {
-      if (err) {
-        return res.status(500).json({ message: 'Error logging out' });
-      }
-      res.clearCookie('connect.sid'); // Clear session cookie
-      res.status(200).json({ message: 'Logged out successfully' });
-    });
+    req.session.destroy(); // Destroy the session
+    res.clearCookie('connect.sid'); // Clear session cookie
+    res.status(200).json({ message: 'Logged out successfully' });
   }
 
   // Handle password update (PUT request)
   if (req.method === 'PUT' && req.body.updatePassword) {
     const { currentPassword, newPassword } = req.body;
 
-    if (!req.session || !req.session.userId) {
+    if (!req.session || !req.session.get("userId")) {
       return res.status(401).json({ message: 'Unauthorized' });
     }
 
     try {
-      const user = await User.findOne({ uid: req.session.userId });
+      const user = await User.findOne({ uid: req.session.get("userId") });
       if (!user || user.password !== currentPassword) {
         return res.status(400).json({ message: 'Incorrect current password' });
       }
@@ -131,9 +130,9 @@ const handleUserRequest = async (req, res) => {
 
   // Handle checking login status (GET request)
   if (req.method === 'GET') {
-    if (req.session && req.session.userId) {
+    if (req.session && req.session.get("userId")) {
       try {
-        const user = await User.findOne({ uid: req.session.userId });
+        const user = await User.findOne({ uid: req.session.get("userId") });
         if (user) {
           user.password = ''; // Don't send password
           return res.json({ loggedIn: true, user });
@@ -150,4 +149,10 @@ const handleUserRequest = async (req, res) => {
   res.status(405).json({ message: 'Method Not Allowed' });
 };
 
-export default handleUserRequest;
+export default withIronSession(handleUserRequest, {
+  password: "1234", // Use a strong session secret
+  cookieName: "your-session-cookie",    // Name for the session cookie
+  cookieOptions: {
+    secure: process.env.NODE_ENV === "production", // Only secure cookies in production
+  },
+});
