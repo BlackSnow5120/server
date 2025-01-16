@@ -10,6 +10,14 @@ const connect = async () => {
   await connectToDatabase();
 };
 
+// CORS headers
+const setCorsHeaders = (res) => {
+  res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000'); // Update with your front-end URL
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+};
+
 // POST: Add a new comment
 export const addComment = async (req, res) => {
   try {
@@ -74,6 +82,15 @@ export const deleteComment = async (req, res) => {
 export default async function handler(req, res) {
   await connect();  // Connect to the database
 
+  // Set CORS headers
+  setCorsHeaders(res);
+
+  // Handle preflight OPTIONS requests
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();  // Respond with a 200 status for OPTIONS
+  }
+
+  // Handle the different HTTP methods
   switch (req.method) {
     case 'POST':
       return addComment(req, res);
