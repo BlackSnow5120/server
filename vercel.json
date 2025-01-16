@@ -1,13 +1,25 @@
 {
-  "routes": [
+  "headers": [
     {
-      "src": "/api/(.*)",
-      "headers": {
-        "Access-Control-Allow-Origin": "*", 
-        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",  
-        "Access-Control-Allow-Headers": "Content-Type, Authorization",    
-        "Access-Control-Allow-Credentials": "true"                         
-      }
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "http://localhost:3000"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, PUT, DELETE, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type, Authorization"
+        },
+        {
+          "key": "Access-Control-Allow-Credentials",
+          "value": "true"
+        }
+      ]
     }
   ]
 }
