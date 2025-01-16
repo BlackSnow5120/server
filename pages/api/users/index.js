@@ -165,7 +165,9 @@ export default withIronSession(handleUserRequest, {
   cookieName: "your-session-cookie12",    // Name for the session cookie
   cookieOptions: {
     secure: process.env.NODE_ENV === "production", // Set to true only in production
-    httpOnly: true, // Set httpOnly to true to avoid access from JavaScript
-    maxAge: 24 * 60 * 60 * 1000,  // Optional: Session expiry time (1 day)
+    httpOnly: true, // Makes the cookie inaccessible to JavaScript
+    sameSite: "None", // Allows cross-origin requests
+    maxAge: 24 * 60 * 60, // Cookie expires in 1 day (adjust as needed)
+    path: "/",
   },
 });
