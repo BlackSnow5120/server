@@ -43,11 +43,12 @@ const handleUserRequest = async (req, res) => {
       await newUser.save();
       req.session.set("userId", newUser.uid); // Store user ID in session
       req.session.set("isLoggedIn", true); // Set login status
-      await req.session.save(); // Make sure the session is saved properly
-      res.status(201).json({ message: 'User registered successfully' });
+      await req.session.save(); // Ensure session is saved
+
+      return res.status(201).json({ message: 'User registered successfully' }); // Make sure to return here to avoid further response writes
     } catch (error) {
       console.error('Error saving user:', error);
-      res.status(500).json({ message: 'Error registering user' });
+      return res.status(500).json({ message: 'Error registering user' });
     }
   }
 
@@ -64,13 +65,13 @@ const handleUserRequest = async (req, res) => {
       req.session.set("userId", user.uid); // Store user ID in session
       req.session.set("user", user); // Store user details in session
       req.session.set("isLoggedIn", true); // Set login status
-      await req.session.save(); // Save session after setting values
+      await req.session.save(); // Ensure session is saved
 
       user.password = ''; // Don't send password in response
-      res.status(200).json({ message: 'Login successful', user });
+      return res.status(200).json({ message: 'Login successful', user });
     } catch (error) {
       console.error('Error logging in:', error);
-      res.status(500).json({ message: 'Error logging in' });
+      return res.status(500).json({ message: 'Error logging in' });
     }
   }
 
@@ -80,11 +81,12 @@ const handleUserRequest = async (req, res) => {
       req.session.unset('userId');  // Unset user ID from session
       req.session.unset('user');    // Unset user details from session
       req.session.unset('isLoggedIn'); // Unset login status from session
-      await req.session.save();
-      res.status(200).json({ message: 'Logged out successfully' });
+      await req.session.save(); // Ensure session is saved
+
+      return res.status(200).json({ message: 'Logged out successfully' }); // Ensure return here
     } catch (error) {
       console.error('Error logging out:', error);
-      res.status(500).json({ message: 'Error logging out' });
+      return res.status(500).json({ message: 'Error logging out' });
     }
   }
 
@@ -104,10 +106,11 @@ const handleUserRequest = async (req, res) => {
 
       user.password = newPassword;
       await user.save();
-      res.status(200).json({ message: 'Password updated successfully' });
+
+      return res.status(200).json({ message: 'Password updated successfully' }); // Ensure return here
     } catch (error) {
       console.error('Error updating password:', error);
-      res.status(500).json({ message: 'Error updating password' });
+      return res.status(500).json({ message: 'Error updating password' });
     }
   }
 
@@ -128,10 +131,11 @@ const handleUserRequest = async (req, res) => {
       user.dateOfBirth = dateOfBirth;
 
       await user.save();
-      res.status(200).json({ message: 'Profile updated successfully', user });
+
+      return res.status(200).json({ message: 'Profile updated successfully', user }); // Ensure return here
     } catch (error) {
       console.error('Error updating profile:', error);
-      res.status(500).json({ message: 'Error updating profile' });
+      return res.status(500).json({ message: 'Error updating profile' });
     }
   }
 
@@ -146,20 +150,19 @@ const handleUserRequest = async (req, res) => {
         }
       } catch (error) {
         console.error('Error checking login status:', error);
-        res.status(500).json({ message: 'Error checking login status' });
+        return res.status(500).json({ message: 'Error checking login status' });
       }
     }
-    res.json({ loggedIn: false });
+    return res.json({ loggedIn: false });
   }
 
   // Handle unsupported methods
-  res.status(405).json({ message: 'Method Not Allowed' });
+  return res.status(405).json({ message: 'Method Not Allowed' });
 };
 
-
 export default withIronSession(handleUserRequest, {
-  password: "hgdyfbrjshdufhgndjsyetrgfbchdjenrhfs2s455", // Use a strong session secret
-  cookieName: "your-session-cooki2",    // Name for the session cookie
+  password: "hgdyfbrjshdufhgndjsyetrgfbchdwwwwnrhfs2s455", // Use a strong session secret
+  cookieName: "your-session-cookie12",    // Name for the session cookie
   cookieOptions: {
     secure: process.env.NODE_ENV === "production", // Set to true only in production
     httpOnly: true, // Set httpOnly to true to avoid access from JavaScript
