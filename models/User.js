@@ -12,9 +12,13 @@ const userSchema = new mongoose.Schema({
   gender: { type: String, required: true },
   dateOfBirth: { type: Date, required: true },
   role: { type: String, default: 'user' },
+  uid: { type: Number, unique: true }
 });
 
-userSchema.plugin(autoIncrement, { inc_field: 'uid' });
+// Apply the auto-increment plugin only once
+if (mongoose.models.User) {
+  userSchema.plugin(autoIncrement, { inc_field: 'uid' });
+}
 
 const User = mongoose.models.User || mongoose.model('User', userSchema);
 

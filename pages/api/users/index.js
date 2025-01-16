@@ -43,7 +43,7 @@ const handleUserRequest = async (req, res) => {
       await newUser.save();
       req.session.set("userId", newUser.uid); // Store user ID in session
       req.session.set("isLoggedIn", true); // Set login status
-      await req.session.save();
+      await req.session.save(); // Make sure the session is saved properly
       res.status(201).json({ message: 'User registered successfully' });
     } catch (error) {
       console.error('Error saving user:', error);
@@ -64,10 +64,10 @@ const handleUserRequest = async (req, res) => {
       req.session.set("userId", user.uid); // Store user ID in session
       req.session.set("user", user); // Store user details in session
       req.session.set("isLoggedIn", true); // Set login status
-      await req.session.save();
+      await req.session.save(); // Save session after setting values
 
       user.password = ''; // Don't send password in response
-      res.status(200).json({ message: 'Login successful', user: user });
+      res.status(200).json({ message: 'Login successful', user });
     } catch (error) {
       console.error('Error logging in:', error);
       res.status(500).json({ message: 'Error logging in' });
@@ -76,9 +76,16 @@ const handleUserRequest = async (req, res) => {
 
   // Handle user logout (POST request)
   if (req.method === 'POST' && req.body.logout) {
-    req.session.destroy(); // Destroy the session
-    res.clearCookie('connect.sid'); // Clear session cookie
-    res.status(200).json({ message: 'Logged out successfully' });
+    try {
+      req.session.unset('userId');  // Unset user ID from session
+      req.session.unset('user');    // Unset user details from session
+      req.session.unset('isLoggedIn'); // Unset login status from session
+      await req.session.save();
+      res.status(200).json({ message: 'Logged out successfully' });
+    } catch (error) {
+      console.error('Error logging out:', error);
+      res.status(500).json({ message: 'Error logging out' });
+    }
   }
 
   // Handle password update (PUT request)
@@ -149,10 +156,13 @@ const handleUserRequest = async (req, res) => {
   res.status(405).json({ message: 'Method Not Allowed' });
 };
 
+
 export default withIronSession(handleUserRequest, {
-  password: "hgdyfbrjshdufhgndjsyetrgfbchdjenrhfyct455", // Use a strong session secret
-  cookieName: "your-session-cookie",    // Name for the session cookie
+  password: "hgdyfbrjshdufhgndjsyetrgfbchdjenrhfs2s455", // Use a strong session secret
+  cookieName: "your-session-cooki2",    // Name for the session cookie
   cookieOptions: {
-    secure: process.env.NODE_ENV === "production", // Only secure cookies in production
+    secure: process.env.NODE_ENV === "production", // Set to true only in production
+    httpOnly: true, // Set httpOnly to true to avoid access from JavaScript
+    maxAge: 24 * 60 * 60 * 1000,  // Optional: Session expiry time (1 day)
   },
 });
