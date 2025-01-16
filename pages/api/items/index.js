@@ -1,14 +1,24 @@
 import { connectToDatabase } from '../../../lib/mongodb';
 import Item from '../../../models/Item';
+
+// Set CORS headers
 const setCorsHeaders = (res) => {
-  res.setHeader('Access-Control-Allow-Origin', 'https://powerhouse-e955.vercel.app'); // Update with your front-end URL
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Origin', 'https://powerhouse-e955.vercel.app'); // Set the front-end URL
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');  // Allow HTTP methods
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization'); // Allow headers
+  res.setHeader('Access-Control-Allow-Credentials', 'true');  // Allow credentials (cookies, etc.)
 };
 
 const handler = async (req, res) => {
-  setCorsHeaders(res); // Set CORS headers
+  // Handle preflight OPTIONS request (CORS)
+  if (req.method === 'OPTIONS') {
+    setCorsHeaders(res); // Set the CORS headers for the OPTIONS request
+    return res.status(204).end();  // Respond with HTTP 204 No Content (no body)
+  }
+
+  // Handle other methods (GET, POST, PUT, DELETE)
+  setCorsHeaders(res);  // Always set the CORS headers for all requests
+
   await connectToDatabase();
 
   if (req.method === 'GET') {
