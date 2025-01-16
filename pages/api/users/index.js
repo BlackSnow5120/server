@@ -130,7 +130,7 @@ const handleUserRequest = async (req, res) => {
   }
 
   // Handle checking login status (GET request)
-  if (req.method === 'GET' && req.body.checkLogin) {
+  if (req.method === 'GET') {
     if (req.session && req.session.userId) {
       try {
         const user = await User.findOne({ uid: req.session.userId });
@@ -147,7 +147,7 @@ const handleUserRequest = async (req, res) => {
   }
 
   // Handle unsupported methods
-  res.status(405).json({ message: req.body });
+  res.status(405).json({ message: 'Method Not Allowed' });
 };
 
 export default handleUserRequest;
