@@ -46,7 +46,7 @@ const handler = async (req, res) => {
     
       // Check if the id is provided, else create a unique ID (or use a custom logic to create numeric ids)
       const uniqueID = Math.floor(Math.random() * 1000000); // Use a random number or your logic for generating a numeric ID
-    
+      const show=1;
       try {
         // Find the existing cart item
           const newItem = new Item({
@@ -57,7 +57,7 @@ const handler = async (req, res) => {
             detail, // Add detail from the request body
             delivery, // Add delivery from the request body
             id: uniqueID, // Set the generated or provided numeric id
-            show: 1 // Set default value for show (can be adjusted as per your requirements)
+            show, // Set default value for show (can be adjusted as per your requirements)
           });
           await newItem.save();
           return res.status(201).json({ message: 'Item added to store' });
