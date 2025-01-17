@@ -87,8 +87,8 @@ const handleCartRequest = async (req, res) => {
       }
 
       res.status(200).json({ message: 'Item deleted successfully' });
-    } catch {
-      res.status(500).send('Server Error');
+    } catch(error) {
+      res.status(500).send(error);
     }
   }
 };
