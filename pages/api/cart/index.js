@@ -78,7 +78,6 @@ const handleCartRequest = async (req, res) => {
 
   if (req.method === 'DELETE') {
     const { cartId } = req.query;
-
     try {
       const deletedItem = await CartItem.findOneAndDelete({ _id: mongoose.Types.ObjectId(cartId) });
 
@@ -87,8 +86,8 @@ const handleCartRequest = async (req, res) => {
       }
 
       res.status(200).json({ message: 'Item deleted successfully' });
-    } catch(error) {
-      res.status(500).send(error);
+    } catch (error) {
+      res.status(500).send('Server Error',error);
     }
   }
 };
