@@ -10,6 +10,7 @@ const itemSchema = new mongoose.Schema({
   price: { type: Number, required: true },
   delivery: { type: String, required: true },
   qty: { type: Number, required: true },
+  show: { type: Number, required: true },
 });
 
 itemSchema.plugin(autoIncrement, { inc_field: 'id' });
