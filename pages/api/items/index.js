@@ -1,70 +1,78 @@
 import { connectToDatabase } from '../../../lib/mongodb';
 import Item from '../../../models/Item';
-import multer from 'multer';
 
-// Set up multer for file uploads
-const storage = multer.memoryStorage(); // Use memory storage if you don't need to save files to disk
-const upload = multer({ storage });
-
-// Disable body parsing for this API route
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
-
-// Middleware to handle file uploads and parse multipart/form-data
-const runMiddleware = (req, res, fn) =>
-  new Promise((resolve, reject) => {
-    fn(req, res, (result) => {
-      if (result instanceof Error) {
-        return reject(result);
-      }
-      return resolve(result);
-    });
-  });
-
+// Reusable CORS Middleware
 const setCorsHeaders = (res) => {
-  res.setHeader('Access-Control-Allow-Origin', 'https://powerhouse-e955.vercel.app');
+  res.setHeader('Access-Control-Allow-Origin', 'https://powerhouse-e955.vercel.app'); // Frontend URL
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
 };
 
+// Centralized error response
 const handleError = (res, statusCode, message, error = null) => {
-  console.error(message, error || '');
+  console.error(`Error: ${message}`, error ? `Details: ${error}` : '');
   res.status(statusCode).json({ message, error });
 };
 
 const handler = async (req, res) => {
+  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     setCorsHeaders(res);
     return res.status(204).end();
   }
 
-  setCorsHeaders(res);
+  setCorsHeaders(res); // Set CORS for all requests
 
   try {
-    await connectToDatabase();
+    await connectToDatabase(); // Ensure DB connection
+
+    if (req.method === 'GET') {
+      const { id } = req.query;
+
+      if (id) {
+        const item = await Item.findOne({ id });
+        if (!item) {
+          return handleError(res, 404, 'Item not found');
+        }
+        return res.status(200).json(item);
+      }
+
+      const items = await Item.find();
+      return res.status(200).json(items);
+    }
+
+    if (req.method === 'POST') {
+      const { id, name, img, detail, price, delivery, qty } = req.body;
+
+      if (!id || !name || !price || !delivery || !qty) {
+        return handleError(res, 400, 'Missing required fields: id, name, price, delivery, qty');
+      }
+
+      const normalizedImg = Array.isArray(img) ? img[0] : img; // Handle array case
+
+      const newItem = new Item({ id, name, img: normalizedImg, detail, price, delivery, qty });
+      await newItem.save();
+
+      return res.status(201).json({ message: 'Item added successfully', item: newItem });
+    }
 
     if (req.method === 'PUT') {
-      // Parse multipart/form-data
-      await runMiddleware(req, res, upload.single('img'));
-
       const { id } = req.query;
-      const { name, detail, price, delivery, qty } = req.body;
-      const img = req.file ? req.file.buffer.toString('base64') : req.body.img;
+      const { name, img, detail, price, delivery, qty } = req.body;
 
       if (!id) {
         return handleError(res, 400, 'Item ID is required');
       }
 
-      console.log('Received data:', id, name, detail, price, delivery, qty);
+      const normalizedImg = Array.isArray(img) ? img[0] : img; // Handle array case
+
+      console.log('Updating Item:', { id, name, detail, price, delivery, qty, img: normalizedImg });
 
       const updatedItem = await Item.findOneAndUpdate(
         { id },
-        { name, img, detail, price, delivery, qty },
-        { new: true }
+        { name, img: normalizedImg, detail, price, delivery, qty },
+        { new: true } // Return updated document
       );
 
       if (!updatedItem) {
