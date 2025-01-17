@@ -59,29 +59,35 @@ const handler = async (req, res) => {
 
     if (req.method === 'PUT') {
       const { id } = req.query;
-      const { name, img, detail, price, delivery, qty } = req.body;
-
+    
+      console.log('Raw Body:', req.body);
+    
+      const { name, img, detail, price, delivery, qty } = req.body || {};
       if (!id) {
         return handleError(res, 400, 'Item ID is required');
       }
-
-      const normalizedImg = Array.isArray(img) ? img[0] : img; // Handle array case
-
-      console.log('Updating Item:', { id, name, detail, price, delivery, qty, img: normalizedImg });
-
-      const updatedItem = await Item.findOneAndUpdate(
-        { id },
-        { name, img: normalizedImg, detail, price, delivery, qty },
-        { new: true } // Return updated document
-      );
-
-      if (!updatedItem) {
-        return handleError(res, 404, 'Item not found');
+    
+      console.log('Updating Item:', { id, name, detail, price, delivery, qty, img });
+    
+      const normalizedImg = Array.isArray(img) ? img[0] : img;
+    
+      try {
+        const updatedItem = await Item.findOneAndUpdate(
+          { id },
+          { name, img: normalizedImg, detail, price, delivery, qty },
+          { new: true } // Return updated document
+        );
+    
+        if (!updatedItem) {
+          return handleError(res, 404, 'Item not found');
+        }
+    
+        return res.status(200).json({ message: 'Item updated successfully', item: updatedItem });
+      } catch (error) {
+        return handleError(res, 500, 'Error updating item', error);
       }
-
-      return res.status(200).json({ message: 'Item updated successfully', item: updatedItem });
     }
-
+    
     if (req.method === 'DELETE') {
       const { id } = req.query;
 
