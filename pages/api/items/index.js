@@ -43,19 +43,31 @@ const handler = async (req, res) => {
     }
 
     if (req.method === 'POST') {
-      const { id, name, img, detail, price, delivery, qty } = req.body;
-
-      if (!id || !name || !price || !delivery || !qty) {
-        return handleError(res, 400, 'Missing required fields: id, name, price, delivery, qty');
+      const { name, img, detail, price, delivery, qty } = req.body;
+  
+      // Validate required fields, excluding id if it's auto-generated
+      if (!name || !price || !delivery || !qty) {
+          return handleError(res, 400, 'Missing required fields: name, price, delivery, qty');
       }
-
-      const normalizedImg = Array.isArray(img) ? img[0] : img; // Handle array case
-
-      const newItem = new Item({ id, name, img: normalizedImg, detail, price, delivery, qty });
+  
+      // Optionally, generate id on the backend if not provided
+      const id = new Date().getTime().toString(); // or any other auto-generation logic
+  
+      const newItem = new Item({
+          id,
+          name,
+          img, // image should be passed as base64 string
+          detail,
+          price,
+          delivery,
+          qty,
+      });
+  
       await newItem.save();
-
+  
       return res.status(201).json({ message: 'Item added successfully', item: newItem });
-    }
+  }
+  
 
     if (req.method === 'PUT') {
       const { id } = req.query;

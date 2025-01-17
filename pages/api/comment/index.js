@@ -105,6 +105,6 @@ export default async function handler(req, res) {
     case 'DELETE':
       return deleteComment(req, res);
     default:
-      res.status(405).json({ success: false, message: 'Method Not Allowed' });
+      res.status(405).json({ success: false, message: req.method });
   }
 }
