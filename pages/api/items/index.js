@@ -49,7 +49,7 @@ const handler = async (req, res) => {
     
       try {
         // Find the existing cart item
-          const newItem = new CartItem({
+          const newItem = new Item({
             qty,
             img, // Use the img from the request body (e.g., gym_images/p2.jpg)
             name, // Add name from the request body
