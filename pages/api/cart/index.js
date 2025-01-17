@@ -1,5 +1,6 @@
 import { connectToDatabase } from '../../../lib/mongodb';
 import CartItem from '../../../models/CartItem';
+import Item from '../../../models/Item';
 
 const setCorsHeaders = (res) => {
   res.setHeader('Access-Control-Allow-Origin', 'https://powerhouse-e955.vercel.app'); // Your frontend URL
