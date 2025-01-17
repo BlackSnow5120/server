@@ -43,7 +43,7 @@ const handleCartRequest = async (req, res) => {
       const existingItem = await CartItem.findOne({ userID, itemID });
   
       // Find the item in the store to update its quantity
-      const itemInStore = await Item.findById({id:itemID});
+      const itemInStore = await Item.findOne({id:itemID});
   
       if (existingItem) {
         existingItem.itemQty += itemQty;  // Increment the quantity in the cart
@@ -91,7 +91,7 @@ const handleCartRequest = async (req, res) => {
     const { cartId } = req.query;
     try {
       const deletedItem = await CartItem.findOneAndDelete({ cid: cartId });
-      const itemInStore = await Item.findById({id:deletedItem.itemID});
+      const itemInStore = await Item.findOne({id:deletedItem.itemID});
       if (itemInStore) {
         itemInStore.qty += deletedItem.itemQty; // Increase the quantity in the store
         await itemInStore.save();
