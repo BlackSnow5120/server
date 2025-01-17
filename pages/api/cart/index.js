@@ -40,7 +40,13 @@ const handleCartRequest = async (req, res) => {
     console.log(itemID, itemQty);
     try {
       const existingItem = await CartItem.findOne({ userID, itemID });
+      const itemID = itemID;
+      const itemInStore = await Item.findById(itemID);  // Assuming you have an Item model
 
+      if (itemInStore) {
+        itemInStore.qty -= deletedItem.itemQty; // Decrease stock quantity
+        await itemInStore.save();
+      }
       if (existingItem) {
         existingItem.itemQty += itemQty;
         await existingItem.save();
@@ -80,7 +86,13 @@ const handleCartRequest = async (req, res) => {
     const { cartId } = req.query;
     try {
       const deletedItem = await CartItem.findOneAndDelete({ cid: cartId });
+      const itemID = deletedItem.itemID;
+      const itemInStore = await Item.findById(itemID);  // Assuming you have an Item model
 
+      if (itemInStore) {
+        itemInStore.qty -= deletedItem.itemQty; // Decrease stock quantity
+        await itemInStore.save();
+      }
       if (!deletedItem) {
         return res.status(404).json({ message: 'Item not found in cart' });
       }
