@@ -79,7 +79,7 @@ const handleCartRequest = async (req, res) => {
   if (req.method === 'DELETE') {
     const { cartId } = req.query;
     try {
-      const deletedItem = await CartItem.findOneAndDelete({ _id: mongoose.Types.ObjectId(cartId) });
+      const deletedItem = await CartItem.findOneAndDelete({ cid: cartId });
 
       if (!deletedItem) {
         return res.status(404).json({ message: 'Item not found in cart' });
