@@ -61,7 +61,7 @@ const handler = async (req, res) => {
   if (req.method === 'PUT') {
     const { id } = req.query;
     const { name, img, detail, price, delivery, qty } = req.body;
-
+    console.log("updated item",req.body);
     try {
       const updatedItem = await Item.findOneAndUpdate(
         { id },
