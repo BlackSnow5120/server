@@ -62,11 +62,10 @@ const handler = async (req, res) => {
       if (!id) {
         return handleError(res, 400, 'Item ID is required');
       }
-
+      console.log(id,name, detail, price, delivery, qty);
       const updatedItem = await Item.findOneAndUpdate(
         { id },
-        { name, img, detail, price, delivery, qty },
-        { new: true }
+        { name, img, detail, price, delivery, qty }
       );
 
       if (!updatedItem) {
