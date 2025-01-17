@@ -50,8 +50,8 @@ const handleCartRequest = async (req, res) => {
         await newItem.save();
         return res.status(201).json({ message: 'Item added to cart' });
       }
-    } catch {
-      res.status(500).send('Server Error');
+    } catch(error) {
+      res.status(500).send(error);
     }
   }
 
