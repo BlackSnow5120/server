@@ -37,7 +37,7 @@ const handleCartRequest = async (req, res) => {
 
   if (req.method === 'POST') {
     const { itemID, itemQty } = req.body;
-
+    console.log(itemID, itemQty);
     try {
       const existingItem = await CartItem.findOne({ userID, itemID });
 
