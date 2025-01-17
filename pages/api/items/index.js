@@ -41,35 +41,43 @@ const handler = async (req, res) => {
       const items = await Item.find();
       return res.status(200).json(items);
     }
-
     if (req.method === 'POST') {
-      const { itemID, itemQty } = req.body;
+      const { qty, name, img, price, detail, delivery, id } = req.body; // Extract data from the body
+    
+      // Check if the id is provided, else create a unique ID (or use a custom logic to create numeric ids)
+      const uniqueID = Math.floor(Math.random() * 1000000); // Use a random number or your logic for generating a numeric ID
+    
       try {
         // Find the existing cart item
         const existingItem = await CartItem.findOne({ userID, itemID });
     
-        // Find the item in the store to update its quantity
+        // Find the item in the store to update its quantity and fetch other details
         const itemInStore = await Item.findById(itemID);
     
         if (existingItem) {
           existingItem.itemQty += itemQty;  // Increment the quantity in the cart
           await existingItem.save();
         } else {
-          const newItem = new CartItem({ userID, itemID, itemQty });
+          // Add the item to the cart, including the image and other details
+          const newItem = new CartItem({
+            qty,
+            img, // Use the img from the request body (e.g., gym_images/p2.jpg)
+            name, // Add name from the request body
+            price, // Add price from the request body
+            detail, // Add detail from the request body
+            delivery, // Add delivery from the request body
+            id: uniqueID, // Set the generated or provided numeric id
+            show: 1 // Set default value for show (can be adjusted as per your requirements)
+          });
           await newItem.save();
         }
     
-        // Update the quantity in the store
-        if (itemInStore) {
-          itemInStore.qty -= itemQty; // Decrease the available quantity in the store
-          await itemInStore.save();
-        }
-    
-        return res.status(201).json({ message: 'Item added to cart' });
+        return res.status(201).json({ message: 'Item added to store' });
       } catch (error) {
         res.status(500).send(error);
       }
     }
+    
     
   
 
