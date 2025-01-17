@@ -1,68 +1,68 @@
 import { connectToDatabase } from '../../../lib/mongodb';
 import Item from '../../../models/Item';
 
-// Set CORS headers
+// Reusable CORS Middleware
 const setCorsHeaders = (res) => {
-  res.setHeader('Access-Control-Allow-Origin', 'https://powerhouse-e955.vercel.app'); // Set the front-end URL
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');  // Allow HTTP methods
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization'); // Allow headers
-  res.setHeader('Access-Control-Allow-Credentials', 'true');  // Allow credentials (cookies, etc.)
+  res.setHeader('Access-Control-Allow-Origin', 'https://powerhouse-e955.vercel.app'); // Frontend URL
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+};
+
+// Centralized error response
+const handleError = (res, statusCode, message, error = null) => {
+  console.error(message, error || '');
+  res.status(statusCode).json({ message, error });
 };
 
 const handler = async (req, res) => {
-  // Handle preflight OPTIONS request (CORS)
+  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
-    setCorsHeaders(res); // Set the CORS headers for the OPTIONS request
-    return res.status(204).end();  // Respond with HTTP 204 No Content (no body)
+    setCorsHeaders(res);
+    return res.status(204).end();
   }
 
-  // Handle other methods (GET, POST, PUT, DELETE)
-  setCorsHeaders(res);  // Always set the CORS headers for all requests
+  setCorsHeaders(res); // Set CORS for all requests
 
-  await connectToDatabase();
+  try {
+    await connectToDatabase(); // Ensure DB connection
 
-  if (req.method === 'GET') {
-    if (req.query.id) {
-      try {
-        const item = await Item.findOne({ id: req.query.id });
+    if (req.method === 'GET') {
+      const { id } = req.query;
+
+      if (id) {
+        const item = await Item.findOne({ id });
         if (!item) {
-          return res.status(404).json({ message: 'Item not found' });
+          return handleError(res, 404, 'Item not found');
         }
-        res.status(200).json(item);
-      } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Error fetching item' });
+        return res.status(200).json(item);
       }
-    } else {
-      try {
-        const items = await Item.find();
-        res.status(200).json(items);
-      } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Error fetching items' });
-      }
+
+      const items = await Item.find();
+      return res.status(200).json(items);
     }
-  }
 
-  if (req.method === 'POST') {
-    const { id, name, img, detail, price, delivery, qty } = req.body;
+    if (req.method === 'POST') {
+      const { id, name, img, detail, price, delivery, qty } = req.body;
 
-    const newItem = new Item({ id, name, img, detail, price, delivery, qty });
+      if (!id || !name || !price || !delivery || !qty) {
+        return handleError(res, 400, 'Missing required fields');
+      }
 
-    try {
+      const newItem = new Item({ id, name, img, detail, price, delivery, qty });
       await newItem.save();
-      res.status(201).json({ message: 'Item added successfully', item: newItem });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Error adding item', error });
-    }
-  }
 
-  if (req.method === 'PUT') {
-    const { id } = req.query;
-    const { name, img, detail, price, delivery, qty } = req.body;
-    console.log("updated item",req.body);
-    try {
+      return res.status(201).json({ message: 'Item added successfully', item: newItem });
+    }
+
+    if (req.method === 'PUT') {
+      const { id } = req.query;
+      const { name, img, detail, price, delivery, qty } = req.body;
+
+      if (!id) {
+        return handleError(res, 400, 'Item ID is required');
+      }
+
       const updatedItem = await Item.findOneAndUpdate(
         { id },
         { name, img, detail, price, delivery, qty },
@@ -70,28 +70,30 @@ const handler = async (req, res) => {
       );
 
       if (!updatedItem) {
-        return res.status(404).json({ message: 'Item not found' });
+        return handleError(res, 404, 'Item not found');
       }
 
-      res.status(200).json({ message: 'Item updated successfully', item: updatedItem });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Error updating item', error });
+      return res.status(200).json({ message: 'Item updated successfully', item: updatedItem });
     }
-  }
 
-  if (req.method === 'DELETE') {
-    const { id } = req.query;
-    try {
+    if (req.method === 'DELETE') {
+      const { id } = req.query;
+
+      if (!id) {
+        return handleError(res, 400, 'Item ID is required');
+      }
+
       const deletedItem = await Item.findOneAndDelete({ id });
       if (!deletedItem) {
-        return res.status(404).json({ message: 'Item not found' });
+        return handleError(res, 404, 'Item not found');
       }
-      res.status(200).json({ message: 'Item deleted successfully' });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Error deleting item', error });
+
+      return res.status(200).json({ message: 'Item deleted successfully' });
     }
+
+    return handleError(res, 405, `Method ${req.method} not allowed`);
+  } catch (error) {
+    handleError(res, 500, 'Internal Server Error', error);
   }
 };
 
