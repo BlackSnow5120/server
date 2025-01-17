@@ -37,22 +37,33 @@ const handleCartRequest = async (req, res) => {
 
   if (req.method === 'POST') {
     const { itemID, itemQty } = req.body;
-    console.log(itemID, itemQty);
     try {
+      // Find the existing cart item
       const existingItem = await CartItem.findOne({ userID, itemID });
+  
+      // Find the item in the store to update its quantity
+      const itemInStore = await Item.findById(itemID);
+  
       if (existingItem) {
-        existingItem.itemQty += itemQty;
+        existingItem.itemQty += itemQty;  // Increment the quantity in the cart
         await existingItem.save();
-        return res.status(200).json({ message: 'Cart updated successfully' });
       } else {
         const newItem = new CartItem({ userID, itemID, itemQty });
         await newItem.save();
-        return res.status(201).json({ message: 'Item added to cart' });
       }
-    } catch(error) {
+  
+      // Update the quantity in the store
+      if (itemInStore) {
+        itemInStore.qty -= itemQty; // Decrease the available quantity in the store
+        await itemInStore.save();
+      }
+  
+      return res.status(201).json({ message: 'Item added to cart' });
+    } catch (error) {
       res.status(500).send(error);
     }
   }
+  
 
   if (req.method === 'PUT') {
     const { itemID, itemQty } = req.body;
@@ -79,6 +90,11 @@ const handleCartRequest = async (req, res) => {
     const { cartId } = req.query;
     try {
       const deletedItem = await CartItem.findOneAndDelete({ cid: cartId });
+      const itemInStore = await Item.findById(deletedItem.itemID);
+      if (itemInStore) {
+        itemInStore.qty += deletedItem.itemQty; // Increase the quantity in the store
+        await itemInStore.save();
+      }
       res.status(200).json({ message: 'Item deleted successfully' });
     } catch (error) {
       res.status(500).send('Server Error',error);

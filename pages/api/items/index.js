@@ -43,30 +43,34 @@ const handler = async (req, res) => {
     }
 
     if (req.method === 'POST') {
-      const { name, img, detail, price, delivery, qty } = req.body;
-  
-      // Validate required fields, excluding id if it's auto-generated
-      if (!name || !price || !delivery || !qty) {
-          return handleError(res, 400, 'Missing required fields: name, price, delivery, qty');
+      const { itemID, itemQty } = req.body;
+      try {
+        // Find the existing cart item
+        const existingItem = await CartItem.findOne({ userID, itemID });
+    
+        // Find the item in the store to update its quantity
+        const itemInStore = await Item.findById(itemID);
+    
+        if (existingItem) {
+          existingItem.itemQty += itemQty;  // Increment the quantity in the cart
+          await existingItem.save();
+        } else {
+          const newItem = new CartItem({ userID, itemID, itemQty });
+          await newItem.save();
+        }
+    
+        // Update the quantity in the store
+        if (itemInStore) {
+          itemInStore.qty -= itemQty; // Decrease the available quantity in the store
+          await itemInStore.save();
+        }
+    
+        return res.status(201).json({ message: 'Item added to cart' });
+      } catch (error) {
+        res.status(500).send(error);
       }
-  
-      // Optionally, generate id on the backend if not provided
-      const id = new Date().getTime().toString(); // or any other auto-generation logic
-  
-      const newItem = new Item({
-          id,
-          name,
-          img, // image should be passed as base64 string
-          detail,
-          price,
-          delivery,
-          qty,
-      });
-  
-      await newItem.save();
-  
-      return res.status(201).json({ message: 'Item added successfully', item: newItem });
-  }
+    }
+    
   
 
     if (req.method === 'PUT') {
