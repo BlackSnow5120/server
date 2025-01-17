@@ -13,7 +13,7 @@ const handleCartRequest = async (req, res) => {
   await connectToDatabase();
 
   const { userID } = req.query;
-  
+
   if (req.method === 'GET') {
     // Fetch the cart items for the user
     try {
@@ -26,7 +26,7 @@ const handleCartRequest = async (req, res) => {
 
   if (req.method === 'POST') {
     // Adding a new item or updating existing ones
-    const { itemID, itemQty, userID } = req.body;
+    const { itemID, itemQty } = req.body;
 
     try {
       const existingItem = await CartItem.findOne({ userID, itemID });
@@ -49,11 +49,12 @@ const handleCartRequest = async (req, res) => {
 
   if (req.method === 'PUT') {
     // Updating an item’s quantity in the cart
-    const { itemID, itemQty, userID } = req.body;
+    const { itemID, itemQty } = req.body;
+    const { cartId } = req.query; // Get cartId from query parameters
 
     try {
       const updatedItem = await CartItem.findOneAndUpdate(
-        { userID, itemID },
+        { _id: cartId, userID, itemID },
         { itemQty },
         { new: true }
       );
